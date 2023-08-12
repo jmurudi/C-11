@@ -1,0 +1,1082 @@
+
+/***********************************************************************************************
+1. Auto 
+************************************************************************************************/
+Auto :
+
+auto num = 10;  // 'num' is deduced to be of type int
+auto name = "John";  // 'name' is deduced to be of type const char*
+auto result = calculateResult();  // 'result' is deduced based on the return type of 'calculateResult()'
+
+
+Avoid in below scenario:
+auto x = 5;   // What type is 'x'?
+auto y = 3.14;   // What type is 'y'?
+
+// ...
+
+auto result = x + y;   // What type is 'result'?
+
+/***********************************************************************************************
+2. Auto :
+************************************************************************************************/
+
+std::vector<int> numbers = {1, 2, 3, 4, 5};
+
+// Iterate over the elements of the vector using a range-based for loop
+for (int number : numbers) {
+    // Process the number...
+}
+
+Avoid codes like below
+std::vector<int> numbers = {1, 2, 3, 4, 5};
+
+// Iterate over the elements of the vector using an index-based for loop
+for (int i = 0; i < numbers.size(); ++i) {
+    int number = numbers[i];
+    // Process the number...
+}
+
+/***********************************************************************************************
+3. Lambda function :
+************************************************************************************************/
+
+// Lambda function that adds two numbers
+auto sum = [](int a, int b) {
+    return a + b;
+};
+
+// Usage of the lambda function
+int result = sum(3, 4);  // result = 7
+
+[] -> lambda introducer
+
+
+Example 2: Lambda function with capture
+
+int threshold = 5;
+
+// Lambda function that checks if a number is greater than the captured threshold
+auto isGreaterThanThreshold = [threshold](int number) {
+    return number > threshold;
+};
+
+// Usage of the lambda function
+bool greaterThan = isGreaterThanThreshold(8);  // greaterThan = true
+bool lessThan = isGreaterThanThreshold(3);     // lessThan = false
+
+
+Example 3:
+predicate for std::count_if
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+    int threshold = 3;
+
+    int count = std::count_if(numbers.begin(), numbers.end(), [threshold](int number) {
+        return number > threshold;
+    });
+
+    std::cout << "Count: " << count << std::endl;
+
+    return 0;
+}
+
+
+Bad code:
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+    int threshold = 3;
+
+    // Use a separate named function as a predicate for std::count_if
+    bool isGreaterThanThreshold(int number) {
+        return number > threshold;
+    }
+
+    int count = std::count_if(numbers.begin(), numbers.end(), isGreaterThanThreshold);
+
+    std::cout << "Count: " << count << std::endl;
+
+    return 0;
+}
+
+
+
+/***********************************************************************************************
+4. Smart pointers
+************************************************************************************************/
+shared_ptr:shared ownership of dynamically allocated objects.
+
+void exampleSharedPtr() {
+    std::shared_ptr<int> sharedPtr = std::make_shared<int>(42);
+    std::shared_ptr<int> anotherSharedPtr = sharedPtr;
+
+    // Access the value using the shared pointers
+    int value = *sharedPtr;
+    
+
+    // Modify the value
+    *sharedPtr = 100;
+    
+    int anotherValue = *anotherSharedPtr;
+    
+    // Output the values
+    std::cout << "Value: " << value << std::endl;  // Output: Value: 42
+    std::cout << "Another Value: " << anotherValue << std::endl;  // Output: Another Value: 100
+
+    // The memory is automatically deallocated when all shared pointers go out of scope
+}
+
+unique_ptr :
+  // Create a unique_ptr and initialize it with a dynamically allocated object
+    std::unique_ptr<int> uniquePtr(new int(42));
+
+
+int main() {
+    std::unique_ptr<int> ptr1 = std::make_unique<int>(42); ( Added from C++14)
+    std::unique_ptr<int> ptr2;
+
+    // Transfer ownership from ptr1 to ptr2 using std::move
+    ptr2 = std::move(ptr1);
+
+    // Check if ptr2 now owns the object
+    if (ptr1) {
+        std::cout << "ptr2 has value: " << *ptr2 << std::endl;
+    } else {
+        std::cout << "ptr1 is empty." << std::endl;
+    }
+
+    // Attempting to access ptr1 will result in a runtime error because ownership was transferred to ptr2
+    // std::cout << "ptr1 has value: " << *ptr1 << std::endl; // Runtime error
+
+    return 0;
+}
+
+std::weak_ptr is a class template in C++ that is used in conjunction with std::shared_ptr to track the lifetime of dynamically allocated objects without taking ownership. 
+It allows you to observe the state of a shared object without preventing its deletion. 
+
+#include <iostream>
+#include <memory>
+
+struct MyClass {
+    std::weak_ptr<MyClass> next;
+    int data;
+
+    MyClass(int val) : data(val) {
+        std::cout << "Constructing MyClass object with data: " << data << std::endl;
+    }
+
+    ~MyClass() {
+        std::cout << "Destructing MyClass object with data: " << data << std::endl;
+    }
+};
+
+int main() {
+    std::shared_ptr<MyClass> ptr1 = std::make_shared<MyClass>(42);
+    std::shared_ptr<MyClass> ptr2 = std::make_shared<MyClass>(73);
+
+    // Create a weak_ptr that observes ptr1
+    std::weak_ptr<MyClass> weakPtr1 = ptr1;
+
+    // Create a weak_ptr that observes ptr2
+    std::weak_ptr<MyClass> weakPtr2 = ptr2;
+
+    // Check if weakPtr1 is expired
+    if (weakPtr1.expired()) {
+        std::cout << "weakPtr1 is expired." << std::endl;
+    } else {
+        std::cout << "weakPtr1 is still valid." << std::endl;
+    }
+
+    // Check if weakPtr2 is expired
+    if (weakPtr2.expired()) {
+        std::cout << "weakPtr2 is expired." << std::endl;
+    } else {
+        std::cout << "weakPtr2 is still valid." << std::endl;
+    }
+
+    // Reset ptr1 to nullptr, destroying the shared object
+    ptr1.reset();
+
+    // Check if weakPtr1 is expired after resetting ptr1
+    if (weakPtr1.expired()) {
+        std::cout << "weakPtr1 is expired after resetting ptr1." << std::endl;
+    } else {
+        std::cout << "weakPtr1 is still valid after resetting ptr1." << std::endl;
+    }
+
+    // Reset ptr2 to nullptr, destroying the shared object
+    ptr2.reset();
+
+    // Check if weakPtr2 is expired after resetting ptr2
+    if (weakPtr2.expired()) {
+        std::cout << "weakPtr2 is expired after resetting ptr2." << std::endl;
+    } else {
+        std::cout << "weakPtr2 is still valid after resetting ptr2." << std::endl;
+    }
+
+    return 0;
+}
+
+/***********************************************************************************************
+5. nullptr
+************************************************************************************************/
+
+#include <iostream>
+
+void foo(int* ptr) {
+    if (ptr != nullptr) {
+        std::cout << "Value of pointer: " << *ptr << std::endl;
+    } else {
+        std::cout << "Null pointer encountered." << std::endl;
+    }
+}
+
+int main() {
+    int* ptr = nullptr;
+
+    foo(ptr);  // Passing nullptr to the function
+
+    return 0;
+}
+
+Bad :
+
+#include <iostream>
+
+void foo(int* ptr) {
+    if (ptr != NULL) {
+        std::cout << "Value of pointer: " << *ptr << std::endl;
+    } else {
+        std::cout << "Null pointer encountered." << std::endl;
+    }
+}
+
+int main() {
+    int* ptr = 0;
+
+    foo(ptr);  // Passing 0 as a null pointer
+
+    return 0;
+}
+
+#include <iostream>
+
+void func(int) {
+    std::cout << "Called func with integer." << std::endl;
+}
+
+void func(int*) {
+    std::cout << "Called func with pointer." << std::endl;
+}
+
+int main() {
+    func(nullptr);  // Calls func(int*)
+
+    int* ptr = nullptr;
+    func(ptr);      // Calls func(int*)
+    
+    func(0); //func(int
+
+    return 0;
+}
+
+/***********************************************************************************************
+6. Variadic template 
+************************************************************************************************/
+
+#include <iostream>
+
+// Base case of the variadic template recursion
+void printValues() {
+    std::cout << std::endl;
+}
+
+// Recursive variadic template function to print multiple values
+template<typename T, typename... Args>
+void printValues(const T& value, const Args&... args) {
+    std::cout << value << " ";
+    printValues(args...);
+}
+
+int main() {
+    printValues(1, 2.5, "Hello", true);
+    return 0;
+}
+
+// Base case of the variadic template recursion
+int sumValues() {
+    return 0;
+}
+
+// Recursive variadic template function to sum multiple values
+template<typename T, typename... Args>
+int sumValues(const T& value, const Args&... args) {
+    return value + sumValues(args...);
+}
+
+int main() {
+    int sum = sumValues(1, 2, 3, 4, 5, 11, 20, 50);
+    std::cout << "Sum: " << sum << std::endl;
+    return 0;
+}
+
+/***********************************************************************************************
+7. Initializer List:
+************************************************************************************************/
+int arr[] = {1, 2, 3, 4, 5}; // Initializing an array
+std::vector<int> vec = {1, 2, 3, 4, 5}; // Initializing a vector
+std::set<int> s = {1, 2, 3, 4, 5}; // Initializing a set
+std::map<int, std::string> m = {{1, "one"}, {2, "two"}}; // Initializing a map
+
+class MyClass {
+public:
+    MyClass(std::initializer_list<int> values) {
+        // Process the values in the initializer list
+        for (int value : values) {
+            // Do something with each value
+        }
+    }
+};
+
+MyClass obj = {1, 2, 3, 4, 5}; // Initializing a MyClass object
+
+
+
+/***********************************************************************************************
+8. Multithreading and Concurrency
+************************************************************************************************/
+std::thread, 
+std::mutex, 
+std::condition_variable,
+std::atomic,
+std::future, 
+std::chrono,
+
+
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
+#include <future>
+#include <chrono>
+
+std::mutex mtx;
+std::condition_variable cv;
+std::atomic<bool> ready(false);
+std::promise<int> promise;
+std::future<int> future;
+
+void worker()
+{
+    // Simulate some work
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    // Set the promise value
+    promise.set_value(42);
+}
+
+void mainThread()
+{
+    std::cout << "Main thread started." << std::endl;
+
+    // Create a thread
+    std::thread workerThread(worker);
+
+    // Wait for the worker thread to finish
+    workerThread.join();
+
+    // Get the result from the promise
+    int result = future.get();
+
+    std::cout << "Worker thread completed. Result: " << result << std::endl;
+
+    std::cout << "Main thread finished." << std::endl;
+}
+
+int main()
+{
+    // Get the future from the promise
+    future = promise.get_future();
+
+    // Start the main thread
+    mainThread();
+
+    return 0;
+}
+
+
+#include <iostream>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+
+std::mutex mtx;
+std::condition_variable cv;
+int currentValue = 1;
+const int maxValue = 10;
+bool isOddPrinted = false;
+
+void printOdd()
+{
+    while (currentValue <= maxValue)
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+
+        cv.wait(lock, [] { return isOddPrinted == false; });
+
+        if (currentValue % 2 != 0)
+        {
+            std::cout << "Odd: " << currentValue << std::endl;
+            ++currentValue;
+            isOddPrinted = true;
+        }
+
+        lock.unlock();
+        cv.notify_one();
+    }
+}
+
+void printEven()
+{
+    while (currentValue <= maxValue)
+    {
+        std::unique_lock<std::mutex> lock(mtx);
+
+        cv.wait(lock, [] { return isOddPrinted == true; });
+
+        if (currentValue % 2 == 0)
+        {
+            std::cout << "Even: " << currentValue << std::endl;
+            ++currentValue;
+            isOddPrinted = false;
+        }
+
+        lock.unlock();
+        cv.notify_one();
+    }
+}
+
+int main()
+{
+    std::thread t1(printOdd);
+    std::thread t2(printEven);
+
+    t1.join();
+    t2.join();
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+9. Regular Expressions:
+
+************************************************************************************************/
+#include <iostream>
+#include <regex>
+#include <string>
+
+int main()
+{
+    std::string text = "The quick brown fox jumps over the lazy dog.";
+    std::regex pattern("quick.*fox");
+
+    // Search for a pattern in the text
+    std::smatch match;
+    if (std::regex_search(text, match, pattern))
+    {
+        std::cout << "Pattern found: " << match.str() << std::endl;
+    }
+    else
+    {
+        std::cout << "Pattern not found." << std::endl;
+    }
+
+    // Iterate over all matches in the text
+    std::regex_iterator<std::string::iterator> it(text.begin(), text.end(), pattern);
+    std::regex_iterator<std::string::iterator> end;
+
+    for (; it != end; ++it)
+    {
+        std::cout << "Match: " << it->str() << std::endl;
+    }
+
+    return 0;
+}
+
+
+
+/***********************************************************************************************
+11. Static Assertions
+************************************************************************************************/
+#include <iostream>
+
+template <typename T>
+void processValue(T value)
+{
+    static_assert(std::is_integral<T>::value, "T must be an integral type.");
+
+    // Process the value...
+    std::cout << "Processing value: " << value << std::endl;
+}
+
+int main()
+{
+    processValue(42);     // Valid call, T is int
+    processValue(3.14);   // Compilation error, T is double (not integral)
+
+    return 0;
+}
+
+
+template <typename T, int Size>
+class MyArray
+{
+    static_assert(Size > 0, "Size must be greater than 0.");
+
+    // Rest of the class implementation...
+};
+
+int main()
+{
+    MyArray<int, 5> arr1;     // Valid call
+    MyArray<double, -1> arr2; // Compilation error, Size must be greater than 0
+
+    return 0;
+}
+
+#include <iostream>
+#include <vector>
+#include <deque>
+
+static_assert(__cplusplus >= 201103L, "C++11 support required.");
+
+int main()
+{
+    std::vector<int> vec;    // Valid call, requires C++11 support
+    std::deque<int> deq;     // Valid call, requires C++11 support
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+12. Type inference 
+************************************************************************************************/
+
+#include <iostream>
+
+template <typename T>
+void printValue(T value)
+{
+    std::cout << "Value: " << value << std::endl;
+}
+
+int main()
+{
+    printValue<int>(42);         // Explicitly specifying T as int
+    printValue<double>(3.14);    // Explicitly specifying T as double
+    printValue<const char*>("Hello");    // Explicitly specifying T as const char*
+
+    return 0;
+}
+
+#include <iostream>
+
+template <typename T>
+void printValue(T value)
+{
+    std::cout << "Value: " << value << std::endl;
+}
+
+int main()
+{
+    printValue(42);         // Type inference deduces T as int
+    printValue(3.14);       // Type inference deduces T as double
+    printValue("Hello");    // Type inference deduces T as const char*
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+13. Delegating Constructors
+************************************************************************************************/
+#include <iostream>
+
+class MyClass {
+private:
+    int value1;
+    int value2;
+    std::string name;
+
+public:
+    MyClass() : MyClass(0, 0, "Default") {
+        std::cout << "Default constructor called." << std::endl;
+    }
+
+    MyClass(int v1, int v2) : MyClass(v1, v2, "Custom") {
+        std::cout << "Constructor with two arguments called." << std::endl;
+    }
+
+    MyClass(int v1, int v2, const std::string& n)
+        : value1(v1), value2(v2), name(n) {
+        std::cout << "Constructor with three arguments called." << std::endl;
+    }
+
+    void printValues() {
+        std::cout << "Value1: " << value1 << std::endl;
+        std::cout << "Value2: " << value2 << std::endl;
+        std::cout << "Name: " << name << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj1;                // Calls the default constructor
+    MyClass obj2(42, 100);       // Calls the constructor with two arguments
+    MyClass obj3(10, 20, "Test"); // Calls the constructor with three arguments
+
+    obj1.printValues();
+    obj2.printValues();
+    obj3.printValues();
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+14. The override and final specifiers :
+************************************************************************************************/
+
+class Base {
+public:
+    virtual void foo() const;
+};
+
+class Derived : public Base {
+public:
+    void foo() const override;
+};
+
+
+class Base {
+public:
+    virtual void foo() const final;
+};
+
+class Derived : public Base {
+public:
+    void foo() const;  // Compilation error, foo() is marked as final in the base class.
+};
+
+
+/***********************************************************************************************
+15. User-Defined Literal
+************************************************************************************************/
+#include <iostream>
+
+// User-defined literal for seconds
+constexpr long double operator"" _s(long double seconds) {
+    return seconds;
+}
+
+int main() {
+    long double duration = 5.5_s;  // Using the user-defined literal for seconds
+    std::cout << "Duration: " << duration << " seconds." << std::endl;
+
+    return 0;
+}
+
+#include <iostream>
+
+struct Celsius {
+    double value;
+};
+
+Celsius operator"" _C(long double temperature) {
+    return Celsius{static_cast<double>(temperature)};
+}
+
+int main() {
+    Celsius temperature = 25.5_C;  // Using the user-defined literal for Celsius
+    std::cout << "Temperature: " << temperature.value << " degrees Celsius." << std::endl;
+
+    return 0;
+}
+
+
+
+/***********************************************************************************************
+16. Explicit Conversion Functions
+
+************************************************************************************************/
+#include <iostream>
+
+class Distance {
+private:
+    double meters;
+
+public:
+    explicit Distance(double meters) : meters(meters) {}
+
+    double getMeters() const {
+        return meters;
+    }
+};
+
+class Time {
+private:
+    double seconds;
+
+public:
+    explicit Time(double seconds) : seconds(seconds) {}
+
+    double getSeconds() const {
+        return seconds;
+    }
+
+    explicit operator Distance() const {
+        return Distance(seconds * 299792458.0);
+    }
+};
+
+int main() {
+    Time time(2.5);
+    
+    // Explicitly convert Time object to Distance object
+    Distance distance = static_cast<Distance>(time);
+
+    std::cout << "Time: " << time.getSeconds() << " seconds." << std::endl;
+    std::cout << "Distance: " << distance.getMeters() << " meters." << std::endl;
+
+    return 0;
+}
+
+#include <iostream>
+
+class Celsius {
+private:
+    double value;
+
+public:
+    explicit Celsius(double celsius) : value(celsius) {}
+
+    double getValue() const {
+        return value;
+    }
+
+    explicit operator double() const {
+        return (value * 9.0 / 5.0) + 32.0;
+    }
+};
+
+int main() {
+    Celsius temperature(25.0);
+    
+    // Explicitly convert Celsius object to double (Fahrenheit)
+    double fahrenheit = static_cast<double>(temperature);
+
+    std::cout << "Temperature in Celsius: " << temperature.getValue() << " °C." << std::endl;
+    std::cout << "Temperature in Fahrenheit: " << fahrenheit << " °F." << std::endl;
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+17. In-Class Member Initializers
+************************************************************************************************/
+#include <iostream>
+
+class MyClass {
+private:
+    int myInt = 42;  // In-class member initializer
+
+public:
+    void printValue() {
+        std::cout << "Value: " << myInt << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj;
+    obj.printValue();  // Output: Value: 42
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+18. Right Angle Brackets
+************************************************************************************************/
+#include <iostream>
+#include <vector>
+
+int main() {
+
+    std::vector<std::vector<int> > matrix;  // Space added between angle brackets before C++11
+
+    std::vector<std::vector<int>> matrix;  // Nested vectors in C++11 and latter states
+
+    // Add elements to the nested vector
+    matrix.push_back({1, 2, 3});
+    matrix.push_back({4, 5, 6});
+    matrix.push_back({7, 8, 9});
+
+    // Print the elements of the nested vector
+    for (const auto& row : matrix) {
+        for (const auto& element : row) {
+            std::cout << element << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+19. Regular Member Function Pointer
+************************************************************************************************/
+
+#include <iostream>
+
+class Base {
+public:
+    virtual void foo() {
+        std::cout << "Base::foo()" << std::endl;
+    }
+};
+
+class Derived : public Base {
+public:
+    void foo() override {
+        std::cout << "Derived::foo()" << std::endl;
+    }
+};
+
+int main() {
+    Base baseObj;
+    Derived derivedObj;
+
+    void (Base::*baseFuncPtr)() = &Base::foo; // Regular member function pointer
+    void (Base::*derivedFuncPtr)() = &Derived::foo; // Pointer to member function of Derived
+
+    (baseObj.*baseFuncPtr)(); // Invokes Base::foo()
+    (derivedObj.*derivedFuncPtr)(); // Invokes Derived::foo()
+
+    Base* basePtr = &derivedObj; // Base class pointer pointing to Derived object
+
+    (basePtr->*baseFuncPtr)(); // Invokes Derived::foo() through Base pointer
+    (basePtr->*derivedFuncPtr)(); // Invokes Derived::foo() through Base pointer
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+20. Strongly Typed Enumerations
+************************************************************************************************/
+#include <iostream>
+
+enum class Day { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday };
+
+enum  Day_ { Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday };
+
+int main() {
+    Day today = Day::Wednesday;
+    int today_ = 3; ..
+    
+    if (today == Day::Saturday || today == Day::Sunday) {
+        std::cout << "It's the weekend!" << std::endl;
+    } else {
+        std::cout << "It's a weekday." << std::endl;
+    }
+
+// Wrong comparsion
+
+   if (today_ == Day_::Saturday || today_ == Day_::Sunday) {
+        std::cout << "It's the weekend!" << std::endl;
+    } else {
+        std::cout << "It's a weekday." << std::endl;
+    }
+    return 0;
+}
+
+
+/***********************************************************************************************
+21. Default and Deleted Functions
+************************************************************************************************/
+class MySingleton {
+public:
+    MySingleton(const MySingleton&) = delete;  // Mark the copy constructor as deleted
+
+    static MySingleton& getInstance() {
+        static MySingleton instance;
+        return instance;
+    }
+
+private:
+    MySingleton() {}  // Private constructor to enforce singleton pattern
+};
+
+
+/***********************************************************************************************
+22. Non-static Data Member Initializers
+************************************************************************************************/
+class MyClass {
+public:
+    int x = 5;  // In-class member initialization
+
+    void printX() {
+        std::cout << "The value of x is: " << x << std::endl;
+    }
+};
+
+int main() {
+    MyClass obj;
+    obj.printX();  // Output: The value of x is: 5
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+23. Template Aliases
+************************************************************************************************/
+template <typename T>
+using Vector = std::vector<T>;  // Template alias for std::vector<T>
+
+template <typename Key, typename Value>
+using Map = std::map<Key, Value>;  // Template alias for std::map<Key, Value>
+
+int main() {
+    Vector<int> numbers = {1, 2, 3, 4, 5};
+    Map<std::string, int> studentGrades;
+
+    // Use the template aliases
+    numbers.push_back(6);
+    studentGrades["Alice"] = 90;
+
+    return 0;
+}
+
+
+/***********************************************************************************************
+24. constexpr
+************************************************************************************************/
+constexpr int square(int x) {
+    return x * x;
+}
+
+int main() {
+    constexpr int result = square(5);  // Computed at compile-time
+    static_assert(result == 25, "Unexpected result!");
+
+    return 0;
+}
+
+
+
+/***********************************************************************************************
+25. New Standard Library Components
+************************************************************************************************/
+ ** fixed size array  
+#include <array>
+#include <iostream>
+
+int main() {
+    std::array<int, 5> numbers = {1, 2, 3, 4, 5};
+
+    // Accessing elements
+    std::cout << "First element: " << numbers[0] << std::endl;
+    std::cout << "Size: " << numbers.size() << std::endl;
+
+    // Modifying elements
+    numbers[2] = 10;
+
+    // Iterating over elements
+    for (const auto& num : numbers) {
+        std::cout << num << " ";
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+
+**<tuple>**
+#include <tuple>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::tuple<int, std::string, double> person(25, "John", 1.75);
+
+    // Accessing elements
+    std::cout << "Age: " << std::get<0>(person) << std::endl;
+    std::cout << "Name: " << std::get<1>(person) << std::endl;
+    std::cout << "Height: " << std::get<2>(person) << "m" << std::endl;
+
+    // Modifying elements
+    std::get<1>(person) = "Alice";
+
+    return 0;
+}
+<unordered_map>:
+#include <unordered_map>
+#include <iostream>
+#include <string>
+
+int main() {
+    std::unordered_map<std::string, int> studentGrades;
+    studentGrades["Alice"] = 90;
+    studentGrades["Bob"] = 80;
+    studentGrades["Charlie"] = 95;
+
+    // Accessing elements
+    std::cout << "Bob's grade: " << studentGrades["Bob"] << std::endl;
+
+    // Modifying elements
+    studentGrades["Alice"] = 92;
+
+    // Iterating over elements
+    for (const auto& pair : studentGrades) {
+        std::cout << pair.first << ": " << pair.second << std::endl;
+    }
+
+    return 0;
+}
+<clock>
+#include <chrono>
+#include <iostream>
+
+int main() {
+    // Getting current time
+    auto currentTime = std::chrono::system_clock::now();
+    std::chrono::time_point<std::chrono::system_clock> tp = currentTime;
+
+    // Converting time to a string
+    std::time_t time = std::chrono::system_clock::to_time_t(tp);
+    std::string timeString = std::ctime(&time);
+    std::cout << "Current time: " << timeString;
+
+    // Measuring time duration
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Perform some operations
+
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> duration = end - start;
+    std::cout << "Operation took " << duration.count() << " seconds." << std::endl;
+
+    return 0;
+}
